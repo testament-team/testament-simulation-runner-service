@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# - Installs Chromium (most recent version)
+# - Installs Chromedriver at /opt/chromedriver-$CHROMEDRIVER_VERSION
+
+# Install Chrome (https://github.com/mark-adams/docker-chromium-xvfb)
+echo "Installing Chromium..."
+apt-get update && apt-get install -y curl xvfb chromium \
+    && ln -s /usr/bin/xvfb-chromium /usr/bin/google-chrome \
+    && ln -s /usr/bin/xvfb-chromium /usr/bin/chromium-browser
+
+# Install Chrome WebDriver (https://github.com/RobCherry/docker-chromedriver)
+echo "Installing Chromedriver..."
+CHROMEDRIVER_VERSION=73.0.3683.68 && \
+    mkdir -p /opt/chromedriver-$CHROMEDRIVER_VERSION && \
+    curl -sS -o /tmp/chromedriver_linux64.zip http://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip && \
+    unzip -qq /tmp/chromedriver_linux64.zip -d /opt/chromedriver-$CHROMEDRIVER_VERSION && \
+    rm /tmp/chromedriver_linux64.zip && \
+    chmod +x /opt/chromedriver-$CHROMEDRIVER_VERSION/chromedriver && \
+    ln -fs /opt/chromedriver-$CHROMEDRIVER_VERSION/chromedriver /usr/local/bin/chromedriver

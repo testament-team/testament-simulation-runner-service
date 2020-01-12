@@ -1,0 +1,24 @@
+#!/bin/bash
+
+_kill_procs() {
+  kill -TERM $chromium
+  wait $chromium
+  kill -TERM $xvfb
+}
+
+# Setup a trap to catch SIGTERM and relay it to child processes
+trap _kill_procs SIGTERM
+
+# Start Xvfb
+echo "Starting xvfb..."
+export DISPLAY=:1
+Xvfb $DISPLAY -screen 5 1024x768x8 &
+xvfb=$!
+sleep 5
+
+echo "Starting Chrome..."
+chromium --no-sandbox $@ &
+chromium=$!
+
+wait $chromium
+wait $xvfb
