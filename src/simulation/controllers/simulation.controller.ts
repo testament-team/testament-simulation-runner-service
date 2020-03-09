@@ -6,7 +6,7 @@ import { RunSimulationDTO } from '../dtos/run-simulation.dto';
 import { IHar } from '../interfaces/har.interface';
 import { IScreenshot } from '../interfaces/screenshot.interface';
 import { ISimulation } from '../interfaces/simulation.interface';
-import { IAction } from '../interfaces/transaction.interface';
+import { IAction } from '../interfaces/action.interface';
 import { SimulationRunnerService } from '../services/simulation-runner.service';
 
 @Controller('/simulation')
