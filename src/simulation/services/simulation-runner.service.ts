@@ -8,7 +8,7 @@ import { RunSimulationDTO } from "../dtos/run-simulation.dto";
 import { IHar } from "../interfaces/har.interface";
 import { IScreenshot } from "../interfaces/screenshot.interface";
 import { ISimulation } from "../interfaces/simulation.interface";
-import { IAction } from "../interfaces/transaction.interface";
+import { IAction } from "../interfaces/action.interface";
 import { FileLogger } from "./logger";
 import { SimulationExecutorService } from "./simulation-executor.service";
 import { SimulationRepositoryService } from "./simulation-repository.service";
@@ -26,7 +26,8 @@ export class SimulationRunnerService {
 
     constructor(private repoService: SimulationRepositoryService, private executionService: SimulationExecutorService,
         private logger: FileLogger) {
-        this.simulationPath = join(tmpdir(), "arya_simulation");
+        this.simulationPath = join(tmpdir(), "testment_simulation");
+        console.debug(this.simulationPath);
         this.logPath = join(this.simulationPath, "tmp", "log.txt");
         this.harPath = join(this.simulationPath, "tmp", "recording.har");
         this.actionsPath = join(this.simulationPath, "tmp", "actions.json");
