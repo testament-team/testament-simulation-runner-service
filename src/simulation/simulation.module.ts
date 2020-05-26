@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { Cli } from 'src/util/cli';
 import { SimulationController } from './controllers/simulation.controller';
 import { GitService } from './services/git.service';
 import { FileLogger } from './services/logger';
@@ -9,7 +10,7 @@ import { SimulationRunnerService } from './services/simulation-runner.service';
 @Module({
   controllers: [SimulationController],
   providers: [SimulationExecutorService, SimulationRepositoryService, 
-    SimulationRunnerService, GitService, FileLogger],
+    SimulationRunnerService, GitService, FileLogger, Cli],
   exports: [SimulationExecutorService, SimulationRepositoryService, 
     SimulationRunnerService, GitService, FileLogger]
 })

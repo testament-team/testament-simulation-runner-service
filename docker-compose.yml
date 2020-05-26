@@ -1,0 +1,42 @@
+version: "3"
+services:
+  proxy:
+    image: jlazarre95/browsermob-proxy
+    container_name: browsermob-proxy
+    environment:
+      PORT: 8080
+      PROXY_PORT_RANGE: 9000-9010
+      TTL: 120
+    ports:
+      - "8080:8080"
+      - "9000-9010:9000-9010"
+  hub:
+    image: jlazarre95/selenium-hub
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+    environment:
+      GRID_TIMEOUT: 90
+      GRID_BROWSER_TIMEOUT: 90
+  chrome:
+    image: jlazarre95/selenium-node-chrome
+    container_name: selenium-node-chrome
+    volumes:
+      - /dev/shm:/dev/shm
+    depends_on:
+      - hub
+    environment:
+      HUB_HOST: localhost
+      NODE_PORT: 5555
+    network_mode: host
+  firefox:
+    image: jlazarre95/selenium-node-firefox
+    container_name: selenium-node-firefox
+    volumes:
+      - /dev/shm:/dev/shm
+    depends_on:
+      - hub
+    environment:
+      HUB_HOST: localhost
+      NODE_PORT: 5556
+    network_mode: host

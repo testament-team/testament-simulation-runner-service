@@ -3,10 +3,10 @@ import { Response } from 'express';
 import { streamToBuffer } from 'src/util/stream.util';
 import { Readable } from 'stream';
 import { RunSimulationDTO } from '../dtos/run-simulation.dto';
+import { IAction } from '../interfaces/action.interface';
 import { IHar } from '../interfaces/har.interface';
 import { IScreenshot } from '../interfaces/screenshot.interface';
 import { ISimulation } from '../interfaces/simulation.interface';
-import { IAction } from '../interfaces/action.interface';
 import { SimulationRunnerService } from '../services/simulation-runner.service';
 
 @Controller('/simulation')
@@ -23,11 +23,7 @@ export class SimulationController {
 
     @Get()
     getSimulation(): ISimulation | {} {
-        const simulation: ISimulation = this.simulationService.getSimulation();
-        if(simulation) {
-            return simulation;
-        }
-        return {};
+        return this.simulationService.getSimulation();
     }
 
     @Get("/log")

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import * as simpleGit from "simple-git/promise";
+import simpleGit from "simple-git/promise";
 
 export interface IGitRepositoryInfo {
     url: string;
@@ -12,8 +12,8 @@ export class GitService {
 
     private git: simpleGit.SimpleGit = simpleGit();
 
-    cloneRepository(info: IGitRepositoryInfo, path?: string): Promise<string> {
-        return this.git.clone(info.url, path, {
+    async cloneRepository(info: IGitRepositoryInfo, path?: string): Promise<void> {
+        await this.git.clone(info.url, path, {
             username: info.username,
             password: info.password
         });

@@ -1,9 +1,4 @@
 #!/bin/sh
 
 GRADLE_VERSION=${1:-6.0.1}
-
-# Download and install Gradle
-cd /usr/local && \
-    curl -L https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -o gradle-${GRADLE_VERSION}-bin.zip && \
-    unzip gradle-${GRADLE_VERSION}-bin.zip && \
-    rm gradle-${GRADLE_VERSION}-bin.zip
+apk update && apk add gradle

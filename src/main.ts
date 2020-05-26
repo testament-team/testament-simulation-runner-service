@@ -1,9 +1,3 @@
-import { NestFactory } from '@nestjs/core';
-import { env } from 'process';
-import { AppModule } from './app.module';
+import { bootstrap } from "./bootstrap";
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(env["PORT"] || 8081);
-}
-bootstrap();
+bootstrap().catch(err => console.error(err));

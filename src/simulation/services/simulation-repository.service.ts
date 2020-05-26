@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { SimulationRepositoryType } from "../enums/simulation-repository-type.enum";
 import { ISimulation } from "../interfaces/simulation.interface";
+import { SimulationRepositoryType } from "../simulation-repository-type";
 import { GitService } from "./git.service";
 
 @Injectable()

@@ -1,10 +1,20 @@
 import { Injectable } from "@nestjs/common";
 import * as fs from "fs-extra";
+import { stderr, stdout } from "process";
 import uuid = require("uuid");
 
 export interface ILogger {
     info(message: string): void | Promise<void>;
     error(message: string): void | Promise<void>;
+}
+
+export class ConsoleLogger implements ILogger {
+    info(message: string): void | Promise<void> {
+        stdout.write(message);
+    }
+    error(message: string): void | Promise<void> {
+        stderr.write(message);
+    }
 }
 
 @Injectable()
@@ -26,12 +36,12 @@ export class FileLogger implements ILogger {
     }
 
     async info(message: string) {
-        console.log(message);
+        stdout.write(message); // TODO: remove?
         await fs.appendFile(this.path, message);    
     }
 
     async error(message: string) {
-        this.info(message);  
+        await this.info(message);  
     }
 }
 

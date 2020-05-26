@@ -1,6 +1,6 @@
-import { PassThrough, Readable, ReadableOptions, Stream } from "stream";
+import { PassThrough, Readable } from "stream";
 
-export function bufferToStream(buffer: Buffer): Stream {
+export function bufferToStream(buffer: Buffer): Readable {
     const bufferStream: PassThrough = new PassThrough();
     bufferStream.end(buffer);
     return bufferStream;
@@ -13,16 +13,4 @@ export function streamToBuffer(stream: Readable): Promise<Buffer> {
         stream.on('error', (error) => reject(error));
         stream.on('end', () => resolve(Buffer.concat(buffers)));
     });
-}
-
-export class MultiStream extends Readable {
-  _object: any;
-  constructor(object: any, options: ReadableOptions) {
-    super(object instanceof Buffer || typeof object === "string" ? options : { objectMode: true });
-    this._object = object;
-  }
-  _read = () => {
-    this.push(this._object);
-    this._object = null;
-  };
 }
