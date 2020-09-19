@@ -1,6 +1,6 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import { suite, test } from "@testdeck/mocha";
 import { assert } from 'chai';
-import { suite, test } from "mocha-typescript";
 import { setupControllerTest } from 'src/util/test/nestjs-testing.util';
 import { printError } from "src/util/test/supertest.util";
 import request, { Response } from "supertest";

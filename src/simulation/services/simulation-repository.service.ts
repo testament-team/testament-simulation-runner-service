@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ISimulation } from "../interfaces/simulation.interface";
-import { SimulationRepositoryType } from "../simulation-repository-type";
+import { RepositoryType, Simulation } from "../interfaces/simulation.interface";
 import { GitService } from "./git.service";
 
 @Injectable()
@@ -10,10 +9,19 @@ export class SimulationRepositoryService {
         
     }
 
-    async fetchSimulation(simulation: ISimulation, path: string) {
-        const repoType: string = SimulationRepositoryType.GIT;
-        switch(repoType) {
-            case SimulationRepositoryType.GIT:
+    getRepoUrl(simulation: Simulation): string {
+        switch(simulation.repository.type) {
+            case RepositoryType.GIT:
+                return simulation.repository.git.url;
+            default:
+                throw new Error(`Unsupported repository type: ${simulation.repository.type}`);
+        }
+    }
+
+
+    async fetchSimulation(simulation: Simulation, path: string) {
+        switch(simulation.repository.type) {
+            case RepositoryType.GIT:
                 await this.gitService.cloneRepository({ 
                     url: simulation.repository.git.url,
                     username: simulation.repository.git.username,
@@ -21,9 +29,8 @@ export class SimulationRepositoryService {
                 }, path);
                 break;
             default:
-                throw new Error(`Unsupported repository type: ${repoType}`);
+                throw new Error(`Unsupported repository type: ${simulation.repository.type}`);
         }
-        // TODO: set simulation type
     }
 
 }

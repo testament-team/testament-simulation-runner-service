@@ -1,23 +1,54 @@
-export interface ISimulationGitRepositoryConfig {
+import { Type } from "class-transformer";
+import { IsEnum, IsOptional, IsString, Length, ValidateNested } from "class-validator";
+
+export enum SimulationType {
+    JAVA_CHROMIUM = "java_chromium"
+}
+
+export enum RepositoryType {
+    GIT = "git"
+}
+
+export enum SimulationStatus {
+    RUNNING = "running",
+    FAILED = "failed",
+    CANCELLED = "cancelled",
+    COMPLETED = "completed"
+}
+
+export class GitRepository {
+    @IsString()
+    @Length(1, 256)
     url: string;
-    username: string;
-    password: string;
+
+    @IsString()
+    @Length(1, 64)
+    @IsOptional()
+    username?: string;
+
+    @IsString()
+    @Length(1, 64)
+    @IsOptional()
+    password?: string;
 }
 
-export interface ISimulationRepository {
-    git?: ISimulationGitRepositoryConfig;
+export class Repository {
+    @IsEnum(RepositoryType)
+    type: RepositoryType;
+
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => GitRepository)
+    git?: GitRepository;
 }
 
-export type status = "running" | "failed" | "cancelled" | "passed";
 
-export interface ISimulationStatus {
-    value?: status;
-    errorMessage?: string;
-}
-
-export interface ISimulation {
-    repository: ISimulationRepository;
-    args?: string;
-    status?: ISimulationStatus;
-    scripts: string[];
+export interface Simulation {
+    runId: string;
+    type: SimulationType;
+    repository: Repository;
+    args: string;
+    runCommands: string[];
+    status?: SimulationStatus;
+    error?: string;
 }

@@ -1,5 +1,5 @@
+import { suite, test } from "@testdeck/mocha";
 import { mkdirp, remove } from "fs-extra";
-import { suite, test } from "mocha-typescript";
 import { tmpdir } from "os";
 import { join } from "path";
 import { GitService } from "./git.service";

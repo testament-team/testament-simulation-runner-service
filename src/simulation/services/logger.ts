@@ -36,7 +36,7 @@ export class FileLogger implements ILogger {
     }
 
     async info(message: string) {
-        stdout.write(message); // TODO: remove?
+        // stdout.write(message); // TODO: remove?
         await fs.appendFile(this.path, message);    
     }
 

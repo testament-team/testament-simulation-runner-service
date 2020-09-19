@@ -1,106 +1,148 @@
-import { Injectable } from "@nestjs/common";
-import * as fs from "fs-extra";
-import { createReadStream, Stats } from "fs-extra";
-import { extname, join } from "path";
-import { ResourceNotFoundException } from "src/exceptions/resource-not-found.exception";
-import { dateTimeReviver } from "src/util/date.util";
-import { Readable } from "stream";
-import { RunSimulationDTO } from "../dtos/run-simulation.dto";
-import { SimulationLimitReachedException } from "../exceptions/simulation-limit-reached.exception";
-import { IAction } from "../interfaces/action.interface";
-import { IHar } from "../interfaces/har.interface";
-import { IScreenshot } from "../interfaces/screenshot.interface";
-import { ISimulation } from "../interfaces/simulation.interface";
+import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
+import chalk from "chalk";
+import { emptyDir, ensureDir, readFile, writeFile } from "fs-extra";
+import { join } from "path";
+import stripAnsi from "strip-ansi";
+import { StartSimulationEvent } from "../dtos/run-simulation.dto";
+import { Simulation, SimulationStatus } from "../interfaces/simulation.interface";
 import { SimulationPaths } from "../simulation-paths";
 import { FileLogger } from "./logger";
+import { EventOptions, RunEventBus } from "./run.event-bus";
 import { SimulationExecutorService } from "./simulation-executor.service";
 import { SimulationRepositoryService } from "./simulation-repository.service";
 
 @Injectable()
 // TODO: use createReadStream instead of readFile
-export class SimulationRunnerService {
+export class RunService implements OnApplicationBootstrap {
 
-    private simulation: ISimulation;
-
-    constructor(private repoService: SimulationRepositoryService, private executionService: SimulationExecutorService,
-        private logger: FileLogger) {
-        console.debug(SimulationPaths.SIMULATION_PATH);
-        this.logger.setPath(SimulationPaths.LOG_PATH);
+    constructor(private runEventBus: RunEventBus, private repoService: SimulationRepositoryService, 
+        private executorService: SimulationExecutorService,
+        private simulationLogger: FileLogger) {
+        this.simulationLogger.setPath(SimulationPaths.ANSI_LOG_PATH);
+    }
+    
+    async onApplicationBootstrap() {
+        await this.runEventBus.subscribeToSimulationStartEvent((event, options) => 
+            this.onSimulationStartEvent(event, options));
     }
 
-    async runSimulation(dto: RunSimulationDTO): Promise<ISimulation> {
-        if(this.simulation && this.simulation.status && this.simulation.status.value === "running") {
-            throw new SimulationLimitReachedException("A simulation is currently running");
+    async runSimulation(simulation: Simulation, path: string) {
+        await ensureDir(path);
+        await emptyDir(path);
+        await this.simulationLogger.clear();
+        const header: string = chalk.whiteBright("~~~~~~~~~~~~~~~~~~~~");
+        await this.simulationLogger.info(`${header}\n${chalk.yellow("STARTING SIMULATION")}\n${header}\n\nRun ID: ${chalk.green(simulation.runId)}\nSimulation Type: ${chalk.green(simulation.type)}\n\n`);
+        try {                        
+            const srcPath: string = join(path, "src");
+
+            const repoUrl: string = this.repoService.getRepoUrl(simulation);            
+            await this.simulationLogger.info(`Cloning repository ${chalk.blueBright(repoUrl)} -> ${chalk.cyanBright(srcPath)}\n\n`);
+            await this.repoService.fetchSimulation(simulation, srcPath);
+    
+            await this.simulationLogger.info("Executing simulation run commands...\n\n");
+            await this.executeSimulation(simulation, srcPath);
+        } catch(err) {
+            await this.simulationLogger.error(chalk.redBright("Error") + `: ${err.stack}\n\n`);
+            await this.simulationLogger.error(chalk.redBright("SIMULATION FAILED") + " ❌");
+            throw err;
         }
-        const simulation: ISimulation = { 
-            repository: dto.repository, 
-            args: dto.args,
-            scripts: dto.scripts, 
-        };
-
-        await fs.ensureDir(SimulationPaths.SIMULATION_PATH);
-        await fs.emptyDir(SimulationPaths.SIMULATION_PATH);
-
-        // TODO: make this async?
-        await this.repoService.fetchSimulation(simulation, SimulationPaths.SIMULATION_PATH);
-        await this.logger.clear();
-        
-        this.executionService.executeSimulation(simulation, SimulationPaths.SIMULATION_PATH, this.logger)
-            .catch(err => console.error(err));
-
-        return this.simulation = simulation;
+        await this.simulationLogger.info(chalk.greenBright("SIMULATION PASSED") + " 🎉");
     }
 
-    getSimulation(): ISimulation | {} {
-        if(this.simulation)
-            return this.simulation;
-        return {};
+    async generateNonAnsiLogs(ansiLogPath: string, nonAnsiLogPath: string) {
+        const log: string = stripAnsi((await readFile(ansiLogPath)).toString("utf-8"));
+        await writeFile(nonAnsiLogPath, log);
     }
 
-    async getLog(): Promise<Readable> {
-        if(await fs.pathExists(SimulationPaths.LOG_PATH)) {
-            return createReadStream(SimulationPaths.LOG_PATH);
+    async zipSimulationArtifacts(src: string, dest: string) {
+        // await zipFolder(src, dest);
+    }
+
+    async uploadSimulationArtifacts(path: string) {
+        // await this.artifactsService.upload(simulation.runId, createReadStream(artifactsPath));
+    }
+
+    private async onSimulationStartEvent(event: StartSimulationEvent, options: EventOptions): Promise<void> {
+        console.log("Received simulation with run ID: " + chalk.green(event.runId));
+        console.log(`Publishing simulation status changed event: ${chalk.yellow("running")}`);
+        await this.runEventBus.publishSimulationStatusChangedEvent({
+            runId: event.runId,
+            status: SimulationStatus.RUNNING,
+            time: new Date()
+        });
+        console.log("Published");
+        console.log("Running simulation...");
+        try {
+            await this.runSimulation({
+                runId: event.runId,
+                type: event.type,
+                repository: event.repository, 
+                args: event.args,
+                runCommands: event.runCommands, 
+            }, SimulationPaths.SIMULATION_PATH);
+        } catch(err) {
+            console.log(chalk.redBright("Error") + `: ${err.message}\n\n`);
+            console.log(`Simulation ${chalk.red("failed")}`);
+            console.log(`Publishing simulation status changed event: ${chalk.red("failed")}`);
+            await this.runEventBus.publishSimulationStatusChangedEvent({
+                runId: event.runId,
+                error: err.message,
+                status: SimulationStatus.FAILED,
+                time: new Date()
+            });
+            console.log("Published");
+            return;
         }
-        return null;
+
+        console.log(`Simulation ${chalk.green("passed")}`);
+        console.log("Generating non-ANSI logs...");
+        await this.generateNonAnsiLogs(SimulationPaths.ANSI_LOG_PATH, SimulationPaths.LOG_PATH);
+
+        const zippedArtifactsPath: string = join(SimulationPaths.SIMULATION_PATH, "artifacts.zip");
+        console.log(`Zippping simulation artifacts ${chalk.blueBright(SimulationPaths.TMP_PATH)} -> ${chalk.cyanBright(zippedArtifactsPath)}`);
+        await this.zipSimulationArtifacts(SimulationPaths.TMP_PATH, zippedArtifactsPath);
+
+        console.log("Uploading artifacts...");
+        await this.uploadSimulationArtifacts(zippedArtifactsPath);
+
+        console.log(`Publishing simulation status changed event: ${chalk.green("completed")}`);
+        await this.runEventBus.publishSimulationStatusChangedEvent({
+            runId: event.runId,
+            status: SimulationStatus.COMPLETED,
+            time: new Date()
+        });
+        console.log("Published");
+        console.log("Ready to receive new simulation\n");
+
+        options.ack = true;
     }
 
-    async getHar(): Promise<IHar> {
-        if(await fs.pathExists(SimulationPaths.HAR_PATH)) {
-            return fs.readJSON(SimulationPaths.HAR_PATH);
-        } 
-        throw new ResourceNotFoundException("Har file not found");
-    }
-
-    async getActions(): Promise<IAction[]> {
-        if(await fs.pathExists(SimulationPaths.ACTIONS_PATH)) {
-            const actions: IAction[] = await fs.readJSON(SimulationPaths.ACTIONS_PATH, { reviver: dateTimeReviver });
-            return actions;
-        } 
-        return [];
-    }
-
-    async getScreenshots(): Promise<IScreenshot[]> {
-        const screenshots: IScreenshot[] = [];
-        if(await fs.pathExists(SimulationPaths.SCREENSHOTS_PATH)) {
-            const files: string[] = await fs.readdir(SimulationPaths.SCREENSHOTS_PATH);
-            for(const f of files) {
-                const stats: Stats = await fs.lstat(join(SimulationPaths.SCREENSHOTS_PATH, f));
-                if(stats.isFile() && extname(f) === ".png") {
-                    screenshots.push({
-                        name: f,
-                        taken: stats.ctime
-                    });
-                }
-            }        
-        }
-        return screenshots;
-    }
-
-    async getScreenshot(name: string): Promise<Readable> {
-        if(await fs.pathExists(join(SimulationPaths.SCREENSHOTS_PATH, name))) {
-            return fs.createReadStream(join(SimulationPaths.SCREENSHOTS_PATH, name));    
-        }
-        throw new ResourceNotFoundException(`Screenshot ${name} not found`);
+    private async executeSimulation(simulation: Simulation, path: string) {
+        await new Promise(async (resolve, reject) => {
+            // TODO: change to --simulation-path
+            const extraArgs: string = `--simulationPath ${SimulationPaths.SIMULATION_PATH}`;
+            this.executorService.executeSimulation(simulation, path, extraArgs)
+                .on("command", async (index: number, command: string) => {
+                    const coloredIndex: string = chalk.magentaBright(index + ")");
+                    await this.simulationLogger.info(`${coloredIndex} ${chalk.bold(command)}\n\n`);
+                })
+                .on("command-data", async (data, out) => { 
+                    if(out === "stdout") {
+                        await this.simulationLogger.info(data);
+                    } else {
+                        await this.simulationLogger.error(data);
+                    }
+                })
+                .on("command-exit", async code => {
+                    if(code != 0) {
+                        await this.simulationLogger.info("\nEXIT CODE: " + code);
+                    } else {
+                        await this.simulationLogger.info("\nEXIT CODE: " + code + "\n\n");
+                    }
+                })
+                .on("error", err => reject(err))
+                .on("done", () => resolve());
+        });
     }
 
 }

@@ -1,5 +1,5 @@
 import { INestApplication } from "@nestjs/common";
-import { suite, test } from "mocha-typescript";
+import { suite, test } from "@testdeck/mocha";
 import { bootstrap } from "./bootstrap";
 
 @suite

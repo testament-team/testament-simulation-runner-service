@@ -1,6 +1,6 @@
+import { suite, test } from "@testdeck/mocha";
 import { assert } from "chai";
 import { mkdirp, readFile, remove, writeFile } from "fs-extra";
-import { suite, test } from "mocha-typescript";
 import { join } from "path";
 import { SimulationPaths } from "../simulation-paths";
 import { FileLogger } from "./logger";

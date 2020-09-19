@@ -1,17 +1,19 @@
 import { Module } from '@nestjs/common';
+import { AmqpModule } from 'src/amqp/amqp.module';
 import { Cli } from 'src/util/cli';
-import { SimulationController } from './controllers/simulation.controller';
 import { GitService } from './services/git.service';
 import { FileLogger } from './services/logger';
+import { RunEventBus } from './services/run.event-bus';
 import { SimulationExecutorService } from './services/simulation-executor.service';
 import { SimulationRepositoryService } from './services/simulation-repository.service';
-import { SimulationRunnerService } from './services/simulation-runner.service';
+import { RunService } from './services/simulation-runner.service';
 
 @Module({
-  controllers: [SimulationController],
+  imports: [AmqpModule],
+  controllers: [],
   providers: [SimulationExecutorService, SimulationRepositoryService, 
-    SimulationRunnerService, GitService, FileLogger, Cli],
+    RunService, GitService, FileLogger, Cli, RunEventBus],
   exports: [SimulationExecutorService, SimulationRepositoryService, 
-    SimulationRunnerService, GitService, FileLogger]
+    RunService, GitService, FileLogger]
 })
 export class SimulationModule {}

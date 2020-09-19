@@ -7,6 +7,6 @@ import { validationPipe } from './app.validation.pipe';
 export async function bootstrap(): Promise<INestApplication> {
   const app: INestApplication = await NestFactory.create(AppModule);
   app.useGlobalPipes(validationPipe);
-  await app.listen(env["PORT"] || 8081);
+  await app.listen(env["PORT"] || 8084);
   return app;
 }

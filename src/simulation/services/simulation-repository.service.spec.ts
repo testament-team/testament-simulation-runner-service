@@ -1,6 +1,6 @@
-import { suite, test } from "mocha-typescript";
+import { suite, test } from "@testdeck/mocha";
 import { deepEqual, instance, mock, verify } from "ts-mockito";
-import { ISimulation } from "../interfaces/simulation.interface";
+import { RepositoryType, Simulation, SimulationType } from "../interfaces/simulation.interface";
 import { GitService } from "./git.service";
 import { SimulationRepositoryService } from "./simulation-repository.service";
 
@@ -16,15 +16,19 @@ export class SimulationRepositoryServiceTests {
 
     @test
     async testFetchSimulation() {
-        const simulation: ISimulation = {
+        const simulation: Simulation = {
+            runId: "r1",
+            type: SimulationType.JAVA_CHROMIUM,
             repository: {
+                type: RepositoryType.GIT,
                 git: {
                     url: "http://path-to-repo",
                     username: "username",
                     password: "password"
                 }
             },
-            scripts: null
+            args: null,
+            runCommands: null
         };
         await this.simulationRepositoryService.fetchSimulation(simulation, "/path/to/folder");
         

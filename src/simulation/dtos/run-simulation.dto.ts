@@ -1,27 +1,16 @@
-import { IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+import { Repository, SimulationType } from "../interfaces/simulation.interface";
 
-export class SimulationGitRepositoryConfig {
+export class StartSimulationEvent {
     @IsString()
-    @IsNotEmpty()
-    url: string;
+    runId: string;
 
-    @IsString()
-    username: string;
+    @IsEnum(SimulationType)
+    type: SimulationType;
 
-    @IsString()
-    password: string;
-}
-
-export class SimulationRepository {
-    @ValidateNested()
-    @IsOptional()
-    git?: SimulationGitRepositoryConfig;
-}
-
-export class RunSimulationDTO {
     @ValidateNested()
     @IsNotEmpty()
-    repository: SimulationRepository;
+    repository: Repository;
 
     @IsString()
     @IsOptional()
@@ -29,5 +18,5 @@ export class RunSimulationDTO {
 
     @IsString({ each: true })
     @IsNotEmpty()
-    scripts: string[];
+    runCommands: string[];
 }
