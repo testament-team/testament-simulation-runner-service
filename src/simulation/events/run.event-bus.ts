@@ -15,6 +15,7 @@ export interface SimulationStatusChangedEvent {
     status: SimulationStatus;
     error?: string;
     time: Date;
+    artifactsId?: string;
 }
 
 export interface EventOptions {
@@ -23,7 +24,7 @@ export interface EventOptions {
 }
 
 export interface EventHandler<T> {
-    (event: T, options?: EventOptions): void | Promise<void>; 
+    (event: T, options?: EventOptions): void | Promise<void>;
 }
 
 export const RUN_EXCHANGE = "run.exchange";

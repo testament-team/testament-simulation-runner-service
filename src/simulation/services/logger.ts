@@ -18,6 +18,16 @@ export class ConsoleLogger implements ILogger {
 }
 
 @Injectable()
+export class LoggerFactory {
+
+    getFileLogger(path: string): FileLogger {
+        const logger: FileLogger = new FileLogger();
+        logger.setPath(path);
+        return logger;
+    }
+
+}
+
 export class FileLogger implements ILogger {
     private path: string;
     // constructor(private path?: string) {

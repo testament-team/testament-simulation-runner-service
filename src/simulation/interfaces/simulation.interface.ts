@@ -45,6 +45,8 @@ export class Repository {
 
 export interface Simulation {
     runId: string;
+    // TODO: add
+    //path: string;
     type: SimulationType;
     repository: Repository;
     args: string;
