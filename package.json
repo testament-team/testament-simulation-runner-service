@@ -24,6 +24,8 @@
     "open:cov": "open coverage/index.html",
     "docker:build": "docker build -t testament-simulation-runner-service .",
     "docker:run": "docker run --rm -p 8081:8081 --name testament-simulation-runner-service testament-simulation-runner-service",
+    "docker:buildAndRun": "npm run docker:build && npm run docker:run",
+    "docker:run:watch": "tsc-watch --onSuccess \"npm run docker:buildAndRun\"",
     "docker:stop": "docker rm -f testament-simulation-runner-service",
     "docker:compose:up": "docker-compose up",
     "docker:compose:down": "docker-compose down"
