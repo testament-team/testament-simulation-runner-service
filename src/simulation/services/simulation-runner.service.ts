@@ -33,16 +33,15 @@ export class SimulationRunnerService {
     
             await logger.info("Executing simulation run commands...\n\n");
             await this.executeSimulation(simulation, path, logger);
-
-            await logger.info("Generating non-ansi logs...\n");
-            const log: string = stripAnsi((await readFile(ansiLogPath)).toString("utf-8"));
-            await writeFile(nonAnsiLogPath, log);
         } catch(err) {
             await logger.error(chalk.redBright("Error") + `: ${err.stack}\n\n`);
             await logger.error(chalk.redBright("SIMULATION FAILED") + " ❌");
             throw err;
         }
         await logger.info(chalk.greenBright("SIMULATION PASSED") + " 🎉");
+
+        const log: string = stripAnsi((await readFile(ansiLogPath)).toString("utf-8"));
+        await writeFile(nonAnsiLogPath, log);
     }
 
     private async executeSimulation(simulation: Simulation, path: string, logger: FileLogger) {
