@@ -1,0 +1,15 @@
+{
+    "runId": "123",
+    "type": "java_chromium",
+    "repository": {
+        "type": "git",
+        "git": { 
+            "url": "https://github.com/testment-team/testment-core-java"
+        }
+    },
+    "runCommands": [
+        "gradle build -x test",
+        "java -jar build/libs/testment-core-0.0.1.jar ${args}"
+    ],
+    "args": "--simulation search --url https://www.google.com --query cats --browser chrome --auto-screenshots --auto-wait 2 --embedded-proxy --local-driver --headless --log-level=ERROR"
+}
