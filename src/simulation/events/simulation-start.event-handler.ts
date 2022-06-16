@@ -1,6 +1,7 @@
 import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
 import chalk from "chalk";
 import { MultiError } from "src/util/multi.error";
+import { ArtifactRepositoryException } from "../exceptions/artifact-repository.exception";
 import { SimulationStatus } from "../interfaces/simulation.interface";
 import { SimulationArtifactsRepository } from "../repositories/simulation-artifacts.repository";
 import { SimulationRunnerService } from "../services/simulation-runner.service";
@@ -70,10 +71,13 @@ export class SimulationStartEventHandler implements OnApplicationBootstrap {
     }
 
     private async publishFailedStatus(runId: string, err: Error) {
+        if(err instanceof ArtifactRepositoryException) {
+            console.error(err);
+        }
         console.log(`Publishing simulation status changed event: ${chalk.red("failed")}`);
         await this.eventBus.publishSimulationStatusChangedEvent({
             runId: runId,
-            error: err.message,
+            error: err.message || err + "",
             status: SimulationStatus.FAILED,
             time: new Date()
         });

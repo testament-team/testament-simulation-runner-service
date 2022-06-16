@@ -68,7 +68,7 @@ export class SimulationRunnerService {
                     }
                 })
                 .on("error", err => reject(err))
-                .on("done", () => resolve());
+                .on("done", () => resolve(null));
         });
     }
 

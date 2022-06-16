@@ -48,7 +48,7 @@ export class SimulationExecutorService {
                 if(code != 0) {
                     reject(new Error(`Script '${script}' returned a non-zero exit code: ${code}`));
                 } else {
-                    resolve();
+                    resolve(null);
                 }
             });
         });

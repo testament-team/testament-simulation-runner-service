@@ -3,6 +3,7 @@ import { S3 } from "aws-sdk";
 import { createReadStream, unlink } from "fs-extra";
 import { v4 as uuidv4 } from "uuid";
 import { zip } from "zip-a-folder";
+import { ArtifactRepositoryException } from "../exceptions/artifact-repository.exception";
 
 @Injectable()
 export class SimulationArtifactsRepository {
@@ -23,6 +24,8 @@ export class SimulationArtifactsRepository {
                 Body: createReadStream(zipPath),
                 ACL: "private",
             }).promise();
+        } catch (err) {
+            throw new ArtifactRepositoryException("Error saving simulation artifacts to repository: " + err);
         } finally {
             await unlink(zipPath);
         }

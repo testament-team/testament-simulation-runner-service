@@ -21,6 +21,46 @@ npm install
 npm run start:dev
 ```
 
+## Environment
+
+.env
+
+```
+S3_ENDPOINT=<s3-endpoint>
+S3_ACCESS_KEY=<access-key>
+S3_SECRET_KEY=<secret-key>
+```
+
+test/.env
+
+```
+S3_ENDPOINT=<s3-endpoint>
+S3_ACCESS_KEY=<access-key>
+S3_SECRET_KEY=<secret-key>
+```
+
+## Sample RabbitMQ Message
+
+run.simulation.start.queue:
+
+```json
+{
+    "runId": "1234",
+    "type": "java_chromium",
+    "repository": {
+        "type": "git",
+        "git": {
+            "url": "https://github.com/testment-team/testment-core-java",
+        }
+    },
+    "args": "--simulation search --url https://www.google.com --query cats --browser chrome --auto-screenshots --auto-wait 2 --embedded-proxy --local-driver --headless --log-level=ERROR",
+    "runCommands": [
+        "gradle build -x test",
+        "java -jar build/libs/testment-core-0.0.1.jar ${args}"
+    ]
+}
+```
+
 ## How It Works
 
 The Testment Runner is a REST service implemented in NestJS 

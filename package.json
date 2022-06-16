@@ -18,9 +18,9 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "tslint -p tsconfig.json -c tslint.json",
-    "test": "cp -r test dist && DOTENV_CONFIG_PATH=test/.env mocha",
-    "test:debug": "DOTENV_CONFIG_PATH=test/.env mocha --inspect-brk",
-    "test:cov": "DOTENV_CONFIG_PATH=test/.env nyc mocha",
+    "test": "copyfiles test/* dist && mocha",
+    "test:debug": "mocha --inspect-brk",
+    "test:cov": "nyc mocha",
     "open:cov": "open coverage/index.html",
     "docker:build": "docker build -t testament-simulation-runner-service .",
     "docker:run": "docker run --rm -p 8081:8081 --name testament-simulation-runner-service testament-simulation-runner-service",
@@ -31,12 +31,14 @@
     "docker:compose:down": "docker-compose down"
   },
   "mocha": {
+    "env": "dotenv_config_path=test/.env",
     "require": [
       "source-map-support/register",
       "dotenv/config"
     ],
     "full-trace": true,
-    "spec": "dist/**/*.spec.js"
+    "spec": "dist/**/*.spec.js",
+    "exit": true
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
@@ -95,6 +97,7 @@
     "@types/uuid": "^3.4.6",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "copyfiles": "^2.4.1",
     "jest": "^26.0.1",
     "mocha": "^7.1.2",
     "nyc": "^15.0.0",
